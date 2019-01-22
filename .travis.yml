@@ -1,0 +1,22 @@
+sudo: required
+services:
+  -docker
+
+before_install:
+  - docker build -t vsairam/react-test -f ./client/Dockerfile.Dev ./client
+
+script:
+  - docker run vsairam/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t vsairam/multi-client ./client
+  - docker build -t vsairam/multi-nginx ./nginx
+  - docker build -t vsairam/multi-server ./server
+  - docker build -t vsairam/multi-worker ./worker
+  # login to docker hub
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take the images and push them to docker hub
+  - docker push vsairam/multi-client
+  - docker push vsairam/multi-nginx
+  - docker push vsairam/multi-server
+  - docker push vsairam/multi-worker
